@@ -1,0 +1,182 @@
+package Ghostman;
+
+import java.awt.Color;
+import java.awt.Font;
+import java.awt.FontMetrics;
+import java.awt.Graphics;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+
+import javax.swing.JPanel;
+import javax.swing.Timer;
+
+public class Game extends JPanel implements ActionListener {
+	private static final long serialVersionUID = 1L;
+
+	public static GameState state = GameState.PAUSED;
+	private int gameScore;
+
+	private Timer timer;
+	private Handler handler;
+	private Maps maps;
+	public static int currentMap;
+
+	public static Color dotColor = new Color(192, 192, 0);
+	public static Color mazeColor = new Color(5, 100, 5);
+
+	private final int BLOCK_SIZE = 24;
+	private final int N_BLOCKS = 15;
+	private final int SCREEN_SIZE = N_BLOCKS * BLOCK_SIZE;
+
+	private boolean mapDrawn;
+
+	enum GameState {
+		PLAYING, PAUSED, GAMEOVER
+	}
+
+	public Game() {
+		handler = new Handler();
+		maps = new Maps();
+		timer = new Timer(1000, this);
+		timer.start();
+		addKeyListener(new KeyInput(handler));
+		setFocusable(true);
+	}
+
+	// rendering images, background
+	private void render(Graphics g) {
+		// preloads
+		g.setColor(Color.black);
+		g.fillRect(0, 0, SCREEN_SIZE, SCREEN_SIZE);
+		if (mapDrawn == false && currentMap < 3) {
+			drawMap(g, maps.getMapList().get(currentMap));
+		}
+		handler.render(g);
+
+		switch (state) {
+		case PLAYING:
+			playGame(g);
+			break;
+		case PAUSED:
+			showIntroScreen(g);
+			break;
+		case GAMEOVER:
+			gameOver(g);
+			break;
+		}
+	}
+
+	public void drawMap(Graphics g, Integer[][] currentMap) {
+		for (int y = 0, a = 0; a < currentMap.length; y += BLOCK_SIZE, a++) {
+			for (int x = 0, b = 0; b < currentMap[a].length; x += BLOCK_SIZE, b++) {
+
+				g.setColor(mazeColor);
+
+				if ((currentMap[a][b]) == 1) {
+					handler.addObject(new Block(GameObject.ObjectId.Block, b, a));
+				}
+
+				if ((currentMap[a][b]) == 0) {
+					handler.addObject(new Dot(GameObject.ObjectId.Dot, b, a));
+				}
+				if ((currentMap[a][b] == -1)) {
+					g.setColor(Color.black);
+					g.fillRect(x, y, 24, 24);
+
+				}
+				if (currentMap[a][b] == 2) {
+					handler.addObject(new Pac(GameObject.ObjectId.Pac, b, a));
+					Pac.pacCount++;
+					Pac.enemyCount++;
+				}
+				if (currentMap[a][b] == 3) {
+					handler.addObject(new Ghost(GameObject.ObjectId.Ghost, b, a));
+				}
+				if (currentMap[a][b] == 4) {
+					handler.addObject(new RedPac(GameObject.ObjectId.RedPac, b, a));
+					Pac.enemyCount++;
+				}
+			}
+		}
+		handler.sortObjects();
+
+		mapDrawn = true;
+	}
+
+	public void showIntroScreen(Graphics g) {
+
+		g.setColor(new Color(0, 32, 48));
+		g.fillRect(50, SCREEN_SIZE / 2 - 30, SCREEN_SIZE - 100, 50);
+		g.setColor(Color.white);
+		g.drawRect(50, SCREEN_SIZE / 2 - 30, SCREEN_SIZE - 100, 50);
+		String s = "Game Paused";
+		Font small = new Font("Helvetica", Font.BOLD, 14);
+		FontMetrics metr = this.getFontMetrics(small);
+		g.setColor(Color.white);
+		g.setFont(small);
+		g.drawString(s, (SCREEN_SIZE - metr.stringWidth(s)) / 2, SCREEN_SIZE / 2);
+		String f = "Press p to pause/unpause";
+		g.drawString(f, 80, SCREEN_SIZE / 2 + 16);
+	}
+
+	private void playGame(Graphics g) {
+		int count = 0;
+		if (Pac.enemyCount > 0) {
+			for (GameObject obj : handler.object) {
+				if (obj.getId() == GameObject.ObjectId.Pac) {
+					((Pac) obj).pacAI(handler);
+				}
+				if (obj.getId() == GameObject.ObjectId.RedPac) {
+
+					((RedPac) obj).pacAI(handler);
+				}
+			}
+		} else if (Pac.enemyCount == 0) {
+			for (GameObject obj : handler.object) {
+				if (obj.getId() == GameObject.ObjectId.Dot) {
+					count++;
+				}
+			}
+			gameScore = gameScore + (count * 50);
+			handler.clearObjects();
+			currentMap++;
+			mapDrawn = false;
+		}
+		if (currentMap == 3) {
+			state = GameState.GAMEOVER;
+		}
+
+	}
+
+	public void gameOver(Graphics g) {
+		g.setColor(new Color(0, 32, 48));
+		g.fillRect(50, SCREEN_SIZE / 2 - 30, SCREEN_SIZE - 100, 70);
+		g.setColor(Color.white);
+		g.drawRect(50, SCREEN_SIZE / 2 - 30, SCREEN_SIZE - 100, 70);
+		String s = "Game Over";
+		Font small = new Font("Helvetica", Font.BOLD, 14);
+		FontMetrics metr = this.getFontMetrics(small);
+		g.setColor(Color.white);
+		g.setFont(small);
+		g.drawString(s, (SCREEN_SIZE - metr.stringWidth(s)) / 2, SCREEN_SIZE / 2);
+		String f = "Score: " + gameScore;
+		g.drawString(f, (SCREEN_SIZE - metr.stringWidth(s)) / 2, SCREEN_SIZE / 2 + 16);
+
+	}
+
+	@Override
+	public void paintComponent(Graphics g) {
+		super.paintComponent(g);
+		render(g);
+	}
+
+	@Override
+	public void actionPerformed(ActionEvent e) {
+		repaint();
+	}
+
+	public static void main(String[] args) {
+		new Window(350, 350, "GhostMan", new Game());
+	}
+
+}
