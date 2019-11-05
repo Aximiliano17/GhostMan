@@ -20,8 +20,8 @@ protected int listX,listY;//2d matrix coordinates
 public GameObject(ObjectId id,int listX,int listY)
 {
 	this.id=id;
-	this.x=listX*24;
-	this.y=listY*24;
+	this.x=listX*Game.BLOCK_SIZE;
+	this.y=listY*Game.BLOCK_SIZE;
 	this.listX=listX;
 	this.listY=listY;
 }
@@ -52,12 +52,12 @@ public int getListY()
 }
 public  void setListX(int l)
 {
-	this.x=l*24;
+	this.x=l*Game.BLOCK_SIZE;
 	this.listX=l;
 }
 public  void setListY(int l)
 {
-	this.y=l*24;
+	this.y=l*Game.BLOCK_SIZE;
 	this.listY=l;
 }
 
