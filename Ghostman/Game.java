@@ -19,18 +19,19 @@ public class Game extends JPanel implements ActionListener {
 	private Timer timer;
 	private Handler handler;
 	private Maps maps;
-	public static int currentMap;
+	private int currentMap;//keeps track of the current map, since the maps are stored in an arraylist. When currentMap is 0, it will point to first map.
 
 	public static Color dotColor = new Color(192, 192, 0);
 	public static Color mazeColor = new Color(5, 100, 5);
 
-	private final int BLOCK_SIZE = 24;
-	private final int N_BLOCKS = 15;
-	private final int SCREEN_SIZE = N_BLOCKS * BLOCK_SIZE;
+	//Constants for screensize and size of blocks, as well as used to get object coordinates.
+	public static final int BLOCK_SIZE = 30;
+	private static final int N_BLOCKS = 15;
+	private static final int SCREEN_SIZE = N_BLOCKS * BLOCK_SIZE;
 
 	private boolean mapDrawn;
 
-	enum GameState {
+	public enum GameState {
 		PLAYING, PAUSED, GAMEOVER
 	}
 
@@ -43,11 +44,13 @@ public class Game extends JPanel implements ActionListener {
 		setFocusable(true);
 	}
 
-	// rendering images, background
+	// rendering images, and backgrounds
 	private void render(Graphics g) {
-		// preloads
+		// Created a black screen
 		g.setColor(Color.black);
 		g.fillRect(0, 0, SCREEN_SIZE, SCREEN_SIZE);
+		
+		//calls a method to draw the currentMap
 		if (mapDrawn == false && currentMap < 3) {
 			drawMap(g, maps.getMapList().get(currentMap));
 		}
@@ -65,7 +68,7 @@ public class Game extends JPanel implements ActionListener {
 			break;
 		}
 	}
-
+//Draws the map depending on the number in each cell
 	public void drawMap(Graphics g, Integer[][] currentMap) {
 		for (int y = 0, a = 0; a < currentMap.length; y += BLOCK_SIZE, a++) {
 			for (int x = 0, b = 0; b < currentMap[a].length; x += BLOCK_SIZE, b++) {
@@ -81,7 +84,7 @@ public class Game extends JPanel implements ActionListener {
 				}
 				if ((currentMap[a][b] == -1)) {
 					g.setColor(Color.black);
-					g.fillRect(x, y, 24, 24);
+					g.fillRect(x, y, BLOCK_SIZE, BLOCK_SIZE);
 
 				}
 				if (currentMap[a][b] == 2) {
@@ -176,7 +179,7 @@ public class Game extends JPanel implements ActionListener {
 	}
 
 	public static void main(String[] args) {
-		new Window(350, 350, "GhostMan", new Game());
+		new Window(SCREEN_SIZE, SCREEN_SIZE, "GhostMan", new Game());
 	}
 
 }
