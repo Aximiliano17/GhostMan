@@ -14,25 +14,27 @@ import Ghostman.Pac.Direction;
 
 public class Handler {
 
-	public List<GameObject> object = new CopyOnWriteArrayList<GameObject>();
+	private List<GameObject> gameObjects = new CopyOnWriteArrayList<GameObject>();
 
+	public List<GameObject> getGameObjects()
+	{
+		return this.gameObjects;
+	}
 	public void render(Graphics g) {
-		for (GameObject obj : object) {
+		for (GameObject obj : gameObjects) {
 			obj.render(g);
 		}
 	}
-
 	public void addObject(GameObject object) {
-		this.object.add(object);
+		this.gameObjects.add(object);
 	}
-
 	public void removeObject(GameObject object) {
-		this.object.remove(object);
+		this.gameObjects.remove(object);
 	}
 	//list of objects is sorted so that when rendering,a dot won't be drawn on top of Pacs and Ghost.
-	public void sortObjects()
+	public void sortGameObjects()
 	{
-		 Collections.sort(object, new Comparator<GameObject>() {
+		 Collections.sort(gameObjects, new Comparator<GameObject>() {
 		      @Override
 		      public int compare(GameObject obj, GameObject obj2) {
 		          return obj.getId().compareTo(obj2.getId());
@@ -41,10 +43,10 @@ public class Handler {
 	}
 	//at the end of each map, we clear the objects
 	public void clearObjects() {
-		this.object.clear();
+		this.gameObjects.clear();
 	}
-//This method checks for an object at x and y coordinates.Mostly used for blocks and Dots
-	public Boolean hasObject(int x, int y, GameObject.ObjectId o) {
+//This method checks for an object at x and y coordinates
+	public Boolean hasObject(int x, int y, GameObject.ObjectId id) {
 		if (x == 15)
 			x = 0;
 		if (x == -1)
@@ -53,16 +55,16 @@ public class Handler {
 			y = 0;
 		if (y == -1)
 			x = 14;
-		for (GameObject obj : object) {
-			if (obj.getId() == o && obj.getListX() == x && obj.getListY() == y) {
+		for (GameObject obj : this.gameObjects) {
+			if (obj.getId() == id && obj.getListX() == x && obj.getListY() == y) {
 				return true;
 			}
 		}
 		return false;
 	}
-//CHecks to see if there are dots or blocks around the object
-	public List<Pac.Direction> hasObjectsAround(int x, int y, GameObject.ObjectId id) {
-		List<Pac.Direction> direction = new ArrayList<Pac.Direction>();
+//CHecks to see if there are dots or blocks around the object and returns a list of directions it can go to, used for Pac AI
+	public List<Direction> hasObjectsAround(int x, int y, GameObject.ObjectId id) {
+		List<Direction> direction = new ArrayList<Direction>();
 		if (id == GameObject.ObjectId.Dot) {
 			if (hasObject(x, y - 1, id)) {
 				direction.add(Direction.Up);
@@ -76,6 +78,7 @@ public class Handler {
 			if (hasObject(x - 1, y, id)) {
 				direction.add(Direction.Left);
 			}
+			//if there isn't a block in one direction we add that direction to the list
 		} else if (id == GameObject.ObjectId.Block) {
 			if (!hasObject(x, y - 1, id)) {
 				direction.add(Direction.Up);
@@ -92,53 +95,73 @@ public class Handler {
 		}
 		return direction;
 	}
-//Moves object, as long as there isn't a block in the specified direction
-	public void moveObject(Direction d, GameObject t) {
+//Moves object to the specified direction and changes the image to correspond to its direction
+	public void moveObject(Direction d, GameObject obj) {
 		switch (d) {
 		case Up:
-			if (t.getId() == GameObject.ObjectId.Pac||t.getId()==GameObject.ObjectId.RedPac) {
-				Pac p = (Pac) t;
+			if (obj instanceof Pac||obj instanceof RedPac) {
+				Pac p = (Pac) obj;
 				p.setViewY(-1);
 			}
-			if (t.getListY() > 0 && !hasObject(t.getListX(), t.getListY() - 1, GameObject.ObjectId.Block)) {
-				t.setListY(t.getListY() - 1);
-			} else if (t.getListY() == 0 && !hasObject(t.getListX(), 14, GameObject.ObjectId.Block)) {
-				t.setListY(14);
+			if (obj.getListY() > 0 && !hasObject(obj.getListX(), obj.getListY() - 1, GameObject.ObjectId.Block)) {
+				obj.setListY(obj.getListY() - 1);
+			} else if (obj.getListY() == 0 && !hasObject(obj.getListX(), 14, GameObject.ObjectId.Block)) {
+				obj.setListY(14);
 			}
+			removePac();
 			break;
 		case Right:
-			if (t.getId() == GameObject.ObjectId.Pac||t.getId()==GameObject.ObjectId.RedPac) {
-				Pac p = (Pac) t;
+			if (obj instanceof Pac||obj instanceof RedPac) {
+				Pac p = (Pac) obj;
 				p.setViewX(1);
 			}
-			if (t.getListX() < 14 && !hasObject(t.getListX() + 1, t.getListY(), GameObject.ObjectId.Block)) {
-				t.setListX(t.getListX() + 1);
-			} else if (t.getListX() == 14 && !hasObject(0, t.getListY(), GameObject.ObjectId.Block)) {
-				t.setListX(0);
+			if (obj.getListX() < 14 && !hasObject(obj.getListX() + 1, obj.getListY(), GameObject.ObjectId.Block)) {
+				obj.setListX(obj.getListX() + 1);
+			} else if (obj.getListX() == 14 && !hasObject(0, obj.getListY(), GameObject.ObjectId.Block)) {
+				obj.setListX(0);
 			}
+			removePac();
 			break;
 		case Down:
-			if (t.getId() == GameObject.ObjectId.Pac||t.getId()==GameObject.ObjectId.RedPac) {
-				Pac p = (Pac) t;
+			if (obj instanceof Pac||obj instanceof RedPac) {
+				Pac p = (Pac) obj;
 				p.setViewY(1);
 			}
-			if (t.getListY() < 14 && !hasObject(t.getListX(), t.getListY() + 1, GameObject.ObjectId.Block)) {
-				t.setListY(t.getListY() + 1);
-			} else if (t.getListY() == 14 && !hasObject(t.getListX(), 0, GameObject.ObjectId.Block)) {
-				t.setListY(0);
+			if (obj.getListY() < 14 && !hasObject(obj.getListX(), obj.getListY() + 1, GameObject.ObjectId.Block)) {
+				obj.setListY(obj.getListY() + 1);
+			} else if (obj.getListY() == 14 && !hasObject(obj.getListX(), 0, GameObject.ObjectId.Block)) {
+				obj.setListY(0);
 			}
+			removePac();
 			break;
 		case Left:
-			if (t.getId() == GameObject.ObjectId.Pac||t.getId()==GameObject.ObjectId.RedPac) {
-				Pac p = (Pac) t;
+			if (obj instanceof Pac||obj instanceof RedPac) {
+				Pac p = (Pac) obj;
 				p.setViewX(-1);
 			}
-			if (t.getListX() > 0 && !hasObject(t.getListX() - 1, t.getListY(), GameObject.ObjectId.Block)) {
-				t.setListX(t.getListX() - 1);
-			} else if (t.getListX() == 0 && !hasObject(14, t.getListY(), GameObject.ObjectId.Block)) {
-				t.setListX(14);
+			if (obj.getListX() > 0 && !hasObject(obj.getListX() - 1, obj.getListY(), GameObject.ObjectId.Block)) {
+				obj.setListX(obj.getListX() - 1);
+			} else if (obj.getListX() == 0 && !hasObject(14, obj.getListY(), GameObject.ObjectId.Block)) {
+				obj.setListX(14);
 			}
+			removePac();
 			break;
+		}
+	}
+	//If Pac and Ghost are at same location, Pac gets removed
+	public void removePac()
+	{
+		for(GameObject g:this.gameObjects)
+		{
+			for(GameObject p:this.gameObjects)
+			{
+				if(g.getId()==GameObject.ObjectId.Ghost && p.getId()==GameObject.ObjectId.Pac && g.getListX()==p.getListX()&&g.getListY()==p.getListY())
+				{
+					this.gameObjects.remove(p);
+					Pac.pacCount--;
+					Pac.enemyCount--;
+				}
+			}
 		}
 	}
 }
