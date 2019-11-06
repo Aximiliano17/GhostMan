@@ -10,13 +10,13 @@ import javax.swing.ImageIcon;
 
 public class Pac extends GameObject {
 
-	enum Direction {
+	public enum Direction {
 		Up, Right, Down, Left;
 	}
 
 	protected int pacAnimDir = 1;
 	protected int pacAnimation = 0;
-	
+
 	public static int pacCount;
 	public static int enemyCount;
 	protected String pacDown;
@@ -34,18 +34,19 @@ public class Pac extends GameObject {
 		super(id, mapX, mapY);
 		loadImages();
 	}
-public void loadImages()
-{
-	pacDown = "/images/PacManDown.gif";
-	pacDown2 = "/images/PacManDown2.gif";
-	pacLeft = "/images/PacManLeft.gif";
-	pacLeft2 = "/images/PacManLeft2.gif";
-	pacRight = "/images/PacManRight.gif";
-	pacUp = "/images/PacManUp.gif";
-	pacRight2 = "/images/PacManRight2.gif";
-	pacUp2 = "/images/PacManUp2.gif";
-	
-}
+
+	public void loadImages() {
+		pacDown = "/images/PacManDown.gif";
+		pacDown2 = "/images/PacManDown2.gif";
+		pacLeft = "/images/PacManLeft.gif";
+		pacLeft2 = "/images/PacManLeft2.gif";
+		pacRight = "/images/PacManRight.gif";
+		pacUp = "/images/PacManUp.gif";
+		pacRight2 = "/images/PacManRight2.gif";
+		pacUp2 = "/images/PacManUp2.gif";
+
+	}
+
 	@Override
 	public void render(Graphics g) {
 		pacAnimation = pacAnimation + pacAnimDir;
@@ -145,48 +146,31 @@ public void loadImages()
 	}
 
 	protected void pacAI(Handler handler) {
-		
+
 		List<Direction> dotsAround = new ArrayList<Direction>();
-		dotsAround = handler.hasObjectsAround(this.getListX(), this.getListY(),GameObject.ObjectId.Dot);//stores the directions in which there are dots
+		// stores the directions in which there are dots
+		dotsAround = handler.hasObjectsAround(this.getListX(), this.getListY(), GameObject.ObjectId.Dot);
 		if (dotsAround.isEmpty()) {
-			 randomDirection(handler);
-			}
-		 else {
-			eatDot(handler,dotsAround);
-		}}
+			randomDirection(handler);
+		} else {
+			eatDot(handler, dotsAround);
+		}
+	}
 
 	protected void randomDirection(Handler handler) {
 		List<Direction> directions = new ArrayList<Direction>();
-		directions = handler.hasObjectsAround(this.getListX(), this.getListY(),GameObject.ObjectId.Block);//stores the direction it can move
-
+		// stores the directions where there isn't any dots
+		directions = handler.hasObjectsAround(this.getListX(), this.getListY(), GameObject.ObjectId.Block);
 		Random rand = new Random();
 		Direction randomD = directions.get(rand.nextInt(directions.size()));
-		handler.moveObject(randomD,this);
-		for(GameObject obj:handler.object)
-		{
-			if(obj.getId()==GameObject.ObjectId.Ghost&&obj.getListX()==this.getListX()&&obj.getListY()==this.getListY())
-			{
-				handler.removeObject(this);
-				pacCount--;
-				enemyCount--;
-			}
-		}
-		}
-		protected void eatDot(Handler handler,List<Direction> direction)
-		{
-			Random rand = new Random();
-			Direction randomD = direction.get(rand.nextInt(direction.size()));
-			handler.moveObject(randomD,this);
-			handler.object.removeIf(o -> o.getId() == GameObject.ObjectId.Dot && o.getListX() == this.getListX()
-					&& o.getListY() == this.getListY());
-			for(GameObject obj:handler.object)
-			{
-				if(obj.getId()==GameObject.ObjectId.Ghost&&obj.getListX()==this.getListX()&&obj.getListY()==this.getListY())
-				{
-					handler.removeObject(this);
-					pacCount--;
-					enemyCount--;
-				}
-			}
-			}
+		handler.moveObject(randomD, this);
+	}
+
+	protected void eatDot(Handler handler, List<Direction> direction) {
+		Random rand = new Random();
+		Direction randomD = direction.get(rand.nextInt(direction.size()));
+		handler.moveObject(randomD, this);
+		handler.getGameObjects().removeIf(o -> o.getId() == GameObject.ObjectId.Dot && o.getListX() == this.getListX()
+				&& o.getListY() == this.getListY());
+	}
 }
