@@ -9,6 +9,8 @@ import java.util.List;
 public class Maps 
 {
 	private List<Integer[][]> mapList=new ArrayList<Integer[][]>();
+	private boolean[] isDrawn;//tells me if each map has been drawn
+	private int currentMap=0;
 	private final Integer[][] mapOne = new Integer[][] { 
 		{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
 		{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
@@ -64,10 +66,31 @@ public class Maps
 			mapList.add(mapOne);
 			mapList.add(mapTwo);
 			mapList.add(mapThree);
+			isDrawn=new boolean[mapList.size()];
 		}
 		public List<Integer[][]> getMapList()
 		{
 			return this.mapList;
 		}
-		
+		public Integer[][] getMap()
+		{ 
+			return mapList.get(currentMap);
+		}
+		public int getCurrentMap()
+		{
+			return currentMap;
+		}
+		public void nextMap()
+		{
+			currentMap++;
+		}
+		public boolean getIsDrawn()
+		{
+			return isDrawn[currentMap];
+		}
+		public void setIsDrawn(boolean n)
+		{
+			isDrawn[currentMap]=n;
+		}
+ 		
 }
